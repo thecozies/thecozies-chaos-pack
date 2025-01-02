@@ -37,6 +37,9 @@ native_libraries = [
 # Input elf file to generate a mod from.
 elf_path = "build/mod.elf"
 
+# Output mod filename.
+mod_filename = "mm_recomp_mod_template"
+
 # Reference symbol files.
 func_reference_syms_file = "Zelda64RecompSyms/mm.us.rev1.syms.toml"
 data_reference_syms_files = [ "Zelda64RecompSyms/mm.us.rev1.datasyms.toml", "Zelda64RecompSyms/mm.us.rev1.datasyms_static.toml" ]
