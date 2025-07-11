@@ -28,6 +28,8 @@ C_SRCS := $(wildcard src/*.c)
 C_OBJS := $(addprefix $(BUILD_DIR)/, $(C_SRCS:.c=.o))
 C_DEPS := $(addprefix $(BUILD_DIR)/, $(C_SRCS:.c=.d))
 
+all: $(TARGET)
+
 $(TARGET): $(C_OBJS) $(LDSCRIPT) | $(BUILD_DIR)
 	$(LD) $(C_OBJS) $(LDFLAGS) -o $@
 
@@ -42,8 +44,12 @@ $(C_OBJS): $(BUILD_DIR)/%.o : %.c | $(BUILD_DIR) $(BUILD_DIR)/src
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -MMD -MF $(@:.o=.d) -c -o $@
 
 clean:
+ifeq ($(OS),Windows_NT)
+	rmdir /S /Q $(BUILD_DIR)
+else
 	rm -rf $(BUILD_DIR)
+endif
 
 -include $(C_DEPS)
 
-.PHONY: clean
+.PHONY: clean all
