@@ -130,5 +130,5 @@ ChaosEffect bomb_spam = {
 };
 
 RECOMP_CALLBACK("mm_recomp_chaos_framework", chaos_on_init) void register_chaos_effects(void) {
-    chaos_register_effect(&bomb_spam, CHAOS_DISTURBANCE_VERY_LOW, NULL);
+    chaos_register_effect(&bomb_spam, CHAOS_DISTURBANCE_HIGH, NULL);
 }
