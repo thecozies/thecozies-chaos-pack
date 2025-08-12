@@ -32,6 +32,7 @@ all: $(TARGET)
 
 $(TARGET): $(C_OBJS) $(LDSCRIPT) | $(BUILD_DIR)
 	$(LD) $(C_OBJS) $(LDFLAGS) -o $@
+	RecompModTool.exe mod.toml .
 
 $(BUILD_DIR) $(BUILD_DIR)/src:
 ifeq ($(OS),Windows_NT)
@@ -45,7 +46,7 @@ $(C_OBJS): $(BUILD_DIR)/%.o : %.c | $(BUILD_DIR) $(BUILD_DIR)/src
 
 clean:
 ifeq ($(OS),Windows_NT)
-	rmdir /S /Q $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)
 else
 	rm -rf $(BUILD_DIR)
 endif

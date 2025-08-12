@@ -1,0 +1,15 @@
+{
+    "authors" : [
+        "thecozies"
+    ],
+    "dependencies" : [
+        "mm_recomp_chaos_framework"
+    ],
+    "description" : "I forgor to update this lol",
+    "display_name" : "Cozies' Chaos Pack",
+    "game_id" : "mm",
+    "id" : "mm_cozies_chaos_pack",
+    "minimum_recomp_version" : "1.2.0",
+    "short_description" : "All of cozies' chaos effects.",
+    "version" : "1.0.0"
+}
