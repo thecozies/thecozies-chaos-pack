@@ -1,5 +1,6 @@
 #include "chaos_dep.h"
 #include "recomputils.h"
+#include "../mm-decomp/src/overlays/actors/ovl_En_Rd/z_en_rd.h"
 
 extern void Player_UseItem(PlayState* play, Player* this, ItemId item);
 extern void Player_DestroyHookshot(Player* this);
@@ -17,34 +18,109 @@ extern s32 sPlayerHeldItemButtonIsHeldDown;
 extern PlayerAnimationHeader gPlayerAnim_link_silver_throw;
 
 // #define DEBUG_BOMB_SPAM
-#define BOMB_SPAM_DURATION 20*10
+// #define DISABLE_BOMB_SPAM
+#define DISABLE_SUDDEN_REDEAD
+// #define DISABLE_ROLLING_LINK
 
-#ifndef DEBUG_BOMB_SPAM
-bool bomb_spam_active = false;
-#else
+// #define DEBUG_SUDDEN_REDEAD
+
+#define BOMB_SPAM_DURATION 20*10
+#define SUDDEN_REDEAD_DURATION 20*1
+#define ROLLING_LINK_DURATION 20*20
+
+#ifdef DEBUG_BOMB_SPAM
 bool bomb_spam_active = true;
+#else
+bool bomb_spam_active = false;
 #endif
+
+#ifdef DEBUG_SUDDEN_REDEAD
+bool sudden_redead_active = true;
+#else
+bool sudden_redead_active = false;
+#endif
+
+bool rolling_link_active = false;
+
+
+void noop_update_func(GraphicsContext* gfxCtx, GameState* gameState) {
+}
 
 void on_bomb_spam_activate(GraphicsContext* gfxCtx, GameState* gameState) {
     bomb_spam_active = true;
 }
 
-void noop_update_func(GraphicsContext* gfxCtx, GameState* gameState) {
+void on_rolling_link_activate(GraphicsContext* gfxCtx, GameState* gameState) {
+    rolling_link_active = true;
+    recomp_printf("Rolling Link Activated\n");
 }
 
 void on_bomb_spam_end(GraphicsContext* gfxCtx, GameState* gameState) {
 #ifndef DEBUG_BOMB_SPAM
+    recomp_printf("Bomb Spam Deactivated\n");
     bomb_spam_active = false;
 #endif
 }
 
-RECOMP_HOOK("Player_UpdateCommon") void on_player_update_common(Player* this, PlayState* play, Input* input) {
+void on_rolling_link_end(GraphicsContext* gfxCtx, GameState* gameState) {
+    recomp_printf("Rolling Link Deactivated\n");
+    rolling_link_active = false;
+}
+
+void on_sudden_redead_activate(GraphicsContext* gfxCtx, GameState* gameState) {
+    recomp_printf("Sudden Redead Activated\n");
+    sudden_redead_active = true;
+}
+
+void on_sudden_redead_end(GraphicsContext* gfxCtx, GameState* gameState) {
+    recomp_printf("Sudden Redead Deactivated\n");
+#ifndef DEBUG_SUDDEN_REDEAD
+    sudden_redead_active = false;
+#endif
+}
+
+RECOMP_HOOK("Player_UpdateCommon") void on_player_update_common_bombspam(Player* this, PlayState* play, Input* input) {
     if (!bomb_spam_active) {
         return;
     }
     input->cur.button &= ~(Z_TRIG | R_TRIG);
     input->press.button &= ~(Z_TRIG | R_TRIG);
     input->rel.button &= ~(Z_TRIG | R_TRIG);
+}
+
+RECOMP_HOOK("Player_UpdateCommon") void on_player_update_common_redead(Player* this, PlayState* play, Input* input) {
+    if (!sudden_redead_active) {
+        return;
+    }
+    if (this != GET_PLAYER(play)){
+        return;
+    }
+
+    Vec3f spawn_pos;
+    f32 distToCam = Math3D_Dist2D(this->actor.world.pos.x, this->actor.world.pos.z,
+                                   play->mainCamera.eye.x, play->mainCamera.eye.z);
+    f32 distToRedead = 50 + distToCam;
+
+    Vec3f cam_pos_at_link = {play->mainCamera.eye.x, this->actor.world.pos.y, play->mainCamera.eye.z};
+
+    Math_Vec3f_Diff(&this->actor.world.pos, &cam_pos_at_link, &spawn_pos);
+    Math3D_Normalize(&spawn_pos);
+    Math_Vec3f_Scale(&spawn_pos, distToRedead);
+    spawn_pos.x += this->actor.world.pos.x;
+    spawn_pos.y += this->actor.world.pos.y + 20;
+    spawn_pos.z += this->actor.world.pos.z;
+    CollisionPoly *outPoly = NULL;
+    f32 floorPos = BgCheck_EntityRaycastFloor1(&play->colCtx, &outPoly, &spawn_pos);
+    if (outPoly != NULL) {
+        spawn_pos.y = floorPos;
+
+        Actor_Spawn(
+            &play->actorCtx, play, ACTOR_EN_RD,
+            spawn_pos.x, spawn_pos.y, spawn_pos.z,
+            0, 0, 0, EN_RD_TYPE_REGULAR);
+        sudden_redead_active = false;
+    }
+
 }
 
 RECOMP_HOOK("Player_ProcessItemButtons") void Player_ProcessItemButtons(Player* this, PlayState* play) {
@@ -120,6 +196,29 @@ RECOMP_HOOK("Player_ProcessItemButtons") void Player_ProcessItemButtons(Player* 
     }
 }
 
+extern s16 sControlStickWorldYaw;
+extern f32 sControlStickMagnitude;
+
+RECOMP_HOOK("Player_Action_26") void before_player_rolling(Player* this, PlayState* play) {
+    if (!rolling_link_active) {
+        return;
+    }
+
+    if (this->av2.actionVar2 == 0) {
+        f32 speedTarget = 15.0f;
+        Math_AsymStepToF(&this->speedXZ, speedTarget, 0.1f, 0.1f);
+        if (sControlStickMagnitude > 8) {
+            s16 yawTarget = sControlStickWorldYaw;
+            Math_ScaledStepToS(&this->yaw, yawTarget, 0x100);
+            this->actor.shape.rot.y = this->yaw;
+        }
+        if (this->skelAnime.curFrame > 17) {
+            this->speedXZ = speedTarget;
+            this->skelAnime.curFrame = 4.0f;
+        }
+    }
+}
+
 ChaosEffect bomb_spam = {
     .name = "Bomb Spam",
     .duration = BOMB_SPAM_DURATION,
@@ -129,6 +228,40 @@ ChaosEffect bomb_spam = {
     .on_end_fun = on_bomb_spam_end,
 };
 
+ChaosEffect sudden_redead = {
+    .name = "Sudden Redead",
+    .duration = SUDDEN_REDEAD_DURATION,
+
+    .on_start_fun = on_sudden_redead_activate,
+    .update_fun = noop_update_func,
+    .on_end_fun = on_sudden_redead_end,
+};
+
+ChaosEffect rolling_link = {
+    .name = "Rolling Link",
+    .duration = ROLLING_LINK_DURATION,
+
+    .on_start_fun = on_rolling_link_activate,
+    .update_fun = noop_update_func,
+    .on_end_fun = on_rolling_link_end,
+};
+
 RECOMP_CALLBACK("mm_recomp_chaos_framework", chaos_on_init) void register_chaos_effects(void) {
+    #ifndef DEBUG_BOMB_SPAM
+    #ifndef DISABLE_BOMB_SPAM
     chaos_register_effect(&bomb_spam, CHAOS_DISTURBANCE_HIGH, NULL);
+    #endif
+    #endif
+
+    #ifndef DISABLE_SUDDEN_REDEAD
+    chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_VERY_LOW, NULL);
+    chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_LOW, NULL);
+    chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_MEDIUM, NULL);
+    chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_HIGH, NULL);
+    chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_VERY_HIGH, NULL);
+    #endif
+
+    #ifndef DISABLE_ROLLING_LINK
+    chaos_register_effect(&rolling_link, CHAOS_DISTURBANCE_HIGH, NULL);
+    #endif
 }
