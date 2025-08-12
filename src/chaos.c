@@ -21,12 +21,17 @@ extern PlayerAnimationHeader gPlayerAnim_link_silver_throw;
 // #define DISABLE_BOMB_SPAM
 #define DISABLE_SUDDEN_REDEAD
 // #define DISABLE_ROLLING_LINK
+// #define DISABLE_BIG_HEAD
 
 // #define DEBUG_SUDDEN_REDEAD
 
 #define BOMB_SPAM_DURATION 20*12
 #define SUDDEN_REDEAD_DURATION 20*1
 #define ROLLING_LINK_DURATION 20*20
+#define BIG_HEAD_DURATION 20*20
+
+#define BIG_HEAD_MIN_SIZE 1
+#define BIG_HEAD_MAX_SIZE 3.5f
 
 #ifdef DEBUG_BOMB_SPAM
 bool bomb_spam_active = true;
@@ -42,17 +47,21 @@ bool sudden_redead_active = false;
 
 bool rolling_link_active = false;
 
+bool big_head_active = false;
+s32 big_head_counter = 0;
+f32 big_head_size = BIG_HEAD_MIN_SIZE;
 
 void noop_update_func(GraphicsContext* gfxCtx, GameState* gameState) {
 }
 
 void on_bomb_spam_activate(GraphicsContext* gfxCtx, GameState* gameState) {
+    recomp_printf("Bomb Spam Activated\n");
     bomb_spam_active = true;
 }
 
 void on_rolling_link_activate(GraphicsContext* gfxCtx, GameState* gameState) {
-    rolling_link_active = true;
     recomp_printf("Rolling Link Activated\n");
+    rolling_link_active = true;
 }
 
 void on_bomb_spam_end(GraphicsContext* gfxCtx, GameState* gameState) {
@@ -77,6 +86,35 @@ void on_sudden_redead_end(GraphicsContext* gfxCtx, GameState* gameState) {
 #ifndef DEBUG_SUDDEN_REDEAD
     sudden_redead_active = false;
 #endif
+}
+
+void on_big_head_activate(GraphicsContext* gfxCtx, GameState* gameState) {
+    recomp_printf("Big Head Activated\n");
+    big_head_active = true;
+    big_head_counter = 0;
+    big_head_size = BIG_HEAD_MIN_SIZE;
+}
+
+void on_big_head_update(GraphicsContext* gfxCtx, GameState* gameState) {
+    f32 sine_size = Math_SinS(big_head_counter * 0x900) * 0.5f + 0.5f;
+    sine_size += Math_SinS(big_head_counter * 0xA00) * 0.5f + 0.5f;
+    sine_size += Math_SinS(big_head_counter * 0xE00) * 0.5f + 0.5f;
+    sine_size += Math_SinS(big_head_counter * 0x1110) * 0.5f + 0.5f;
+    sine_size /= 4.0f;
+    f32 frames_from_half = ABS((BIG_HEAD_DURATION / 2.0f) - (f32)big_head_counter);
+    f32 from_half_frac = 1.0f - (frames_from_half / (BIG_HEAD_DURATION / 2.0f));
+    big_head_size = sine_size * from_half_frac * (BIG_HEAD_MAX_SIZE - BIG_HEAD_MIN_SIZE) + BIG_HEAD_MIN_SIZE;
+
+    big_head_counter++;
+    if (big_head_counter >= BIG_HEAD_DURATION) {
+        big_head_counter = BIG_HEAD_DURATION;
+        big_head_active = false;
+    }
+}
+
+void on_big_head_end(GraphicsContext* gfxCtx, GameState* gameState) {
+    recomp_printf("Big Head Deactivated\n");
+    big_head_active = false;
 }
 
 RECOMP_HOOK("Player_UpdateCommon") void on_player_update_common_bombspam(Player* this, PlayState* play, Input* input) {
@@ -219,6 +257,36 @@ RECOMP_HOOK("Player_Action_26") void before_player_rolling(Player* this, PlaySta
     }
 }
 
+s32 valid_drawing = false;
+RECOMP_HOOK("Player_DrawGameplay") void on_Player_DrawGameplay(PlayState* play, Player* this, s32 lod, Gfx* cullDList, OverrideLimbDrawFlex overrideLimbDraw) {
+    valid_drawing = big_head_active;
+}
+
+s32 valider_drawing = false;
+RECOMP_HOOK("Player_OverrideLimbDrawGameplayCommon") void on_Player_OverrideLimbDrawGameplayCommon(
+    PlayState* play, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, Actor* actor
+) {
+    if (!valid_drawing || limbIndex != PLAYER_LIMB_HEAD) {
+        valider_drawing = false;
+        return;
+    }
+
+    valider_drawing = true;
+}
+
+RECOMP_HOOK_RETURN("Player_OverrideLimbDrawGameplayCommon") void after_Player_OverrideLimbDrawGameplayCommon() {
+    if (!valid_drawing || !valider_drawing) {
+        valider_drawing = false;
+        return;
+    }
+
+    Matrix_Scale(big_head_size, big_head_size, big_head_size, MTXMODE_APPLY);
+}
+
+RECOMP_HOOK_RETURN("Player_DrawGameplay") void Player_DrawGameplayReturn() {
+    valid_drawing = false;
+}
+
 ChaosEffect bomb_spam = {
     .name = "Bomb Spam",
     .duration = BOMB_SPAM_DURATION,
@@ -246,6 +314,15 @@ ChaosEffect rolling_link = {
     .on_end_fun = on_rolling_link_end,
 };
 
+ChaosEffect big_head = {
+    .name = "Big Head",
+    .duration = BIG_HEAD_DURATION,
+
+    .on_start_fun = on_big_head_activate,
+    .update_fun = on_big_head_update,
+    .on_end_fun = on_big_head_end,
+};
+
 RECOMP_CALLBACK("mm_recomp_chaos_framework", chaos_on_init) void register_chaos_effects(void) {
     #ifndef DEBUG_BOMB_SPAM
     #ifndef DISABLE_BOMB_SPAM
@@ -263,5 +340,10 @@ RECOMP_CALLBACK("mm_recomp_chaos_framework", chaos_on_init) void register_chaos_
 
     #ifndef DISABLE_ROLLING_LINK
     chaos_register_effect(&rolling_link, CHAOS_DISTURBANCE_HIGH, NULL);
+    #endif
+
+    #ifndef DISABLE_BIG_HEAD
+    // Currently set to "low" instead of very low due to head position affecting collision
+    chaos_register_effect(&big_head, CHAOS_DISTURBANCE_LOW, NULL);
     #endif
 }
