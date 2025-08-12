@@ -24,7 +24,7 @@ extern PlayerAnimationHeader gPlayerAnim_link_silver_throw;
 
 // #define DEBUG_SUDDEN_REDEAD
 
-#define BOMB_SPAM_DURATION 20*10
+#define BOMB_SPAM_DURATION 20*12
 #define SUDDEN_REDEAD_DURATION 20*1
 #define ROLLING_LINK_DURATION 20*20
 
