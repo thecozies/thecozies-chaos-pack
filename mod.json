@@ -3,7 +3,8 @@
         "thecozies"
     ],
     "dependencies" : [
-        "mm_recomp_chaos_framework"
+        "mm_recomp_chaos_framework",
+        "mm_recomp_auto_object_slots"
     ],
     "description" : "I forgor to update this lol",
     "display_name" : "Cozies' Chaos Pack",

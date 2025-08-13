@@ -1,5 +1,9 @@
 BUILD_DIR := build
 
+MOD_TOML := mod.toml
+
+BASH_LIKE := 0
+
 # Allow the user to specify the compiler and linker on macOS
 # as Apple Clang does not support MIPS architecture
 ifeq ($(OS),Windows_NT)
@@ -13,7 +17,18 @@ else
     LD      ?= ld.lld
 endif
 
+ifdef MINGW_PREFIX
+	BASH_LIKE := 1
+endif
+
+ifneq ($(OS),Windows_NT)
+	BASH_LIKE := 1
+endif
+
 TARGET  := $(BUILD_DIR)/mod.elf
+NRM_TARGET := mm_cozies_chaos_pack.nrm
+
+NRM_COPY_DEST=~/AppData/Local/Zelda64Recompiled/mods/${NRM_TARGET}
 
 LDSCRIPT := mod.ld
 CFLAGS   := -target mips -mips2 -mabi=32 -O2 -G0 -mno-abicalls -mno-odd-spreg -mno-check-zero-division \
@@ -28,29 +43,34 @@ C_SRCS := $(wildcard src/*.c)
 C_OBJS := $(addprefix $(BUILD_DIR)/, $(C_SRCS:.c=.o))
 C_DEPS := $(addprefix $(BUILD_DIR)/, $(C_SRCS:.c=.d))
 
-all: $(TARGET)
+all: $(TARGET) $(NRM_TARGET) copy_to_mods
 
 $(TARGET): $(C_OBJS) $(LDSCRIPT) | $(BUILD_DIR)
 	$(LD) $(C_OBJS) $(LDFLAGS) -o $@
-	RecompModTool.exe mod.toml .
+
+$(NRM_TARGET): $(TARGET) $(MOD_TOML)
+	RecompModTool.exe $(MOD_TOML) .
 
 $(BUILD_DIR) $(BUILD_DIR)/src:
-ifeq ($(OS),Windows_NT)
-	mkdir $(subst /,\,$@)
-else
+ifeq ($(BASH_LIKE),1)
 	mkdir -p $@
+else
+	mkdir $(subst /,\,$@)
 endif
 
 $(C_OBJS): $(BUILD_DIR)/%.o : %.c | $(BUILD_DIR) $(BUILD_DIR)/src
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -MMD -MF $(@:.o=.d) -c -o $@
 
+copy_to_mods: $(NRM_TARGET)
+	cp $(NRM_TARGET) $(NRM_COPY_DEST)
+
 clean:
-ifeq ($(OS),Windows_NT)
+ifeq ($(BASH_LIKE),1)
 	rm -rf $(BUILD_DIR)
 else
-	rm -rf $(BUILD_DIR)
+	rmdir /S /Q $(BUILD_DIR)
 endif
 
 -include $(C_DEPS)
 
-.PHONY: clean all
+.PHONY: clean all copy_to_mods
