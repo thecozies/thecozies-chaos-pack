@@ -28,7 +28,7 @@ extern PlayerAnimationHeader gPlayerAnim_link_silver_throw;
 // #define DEBUG_SUDDEN_REDEAD
 
 #define BOMB_SPAM_DURATION 20*12
-#define SUDDEN_REDEAD_DURATION 20*1
+#define SUDDEN_REDEAD_DURATION 20*5
 #define ROLLING_LINK_DURATION 20*20
 #define BIG_HEAD_DURATION 20*20
 #define NA_AIM_DURATION 20*20
@@ -382,7 +382,7 @@ RECOMP_CALLBACK("mm_recomp_chaos_framework", chaos_on_init) void register_chaos_
     #endif
 
     #ifndef DISABLE_SUDDEN_REDEAD
-    chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_LOW, NULL);
+    chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_MEDIUM, NULL);
     #endif
 
     #ifndef DISABLE_ROLLING_LINK
