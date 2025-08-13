@@ -20,7 +20,7 @@ extern PlayerAnimationHeader gPlayerAnim_link_silver_throw;
 
 // #define DEBUG_BOMB_SPAM
 // #define DISABLE_BOMB_SPAM
-#define DISABLE_SUDDEN_REDEAD
+// #define DISABLE_SUDDEN_REDEAD
 // #define DISABLE_ROLLING_LINK
 // #define DISABLE_BIG_HEAD
 // #define DISABLE_NA_AIM
@@ -42,11 +42,7 @@ bool bomb_spam_active = true;
 bool bomb_spam_active = false;
 #endif
 
-#ifdef DEBUG_SUDDEN_REDEAD
-bool sudden_redead_active = true;
-#else
 bool sudden_redead_active = false;
-#endif
 
 bool rolling_link_active = false;
 
@@ -123,6 +119,9 @@ void on_big_head_end(GraphicsContext* gfxCtx, GameState* gameState) {
 }
 
 RECOMP_HOOK("Player_UpdateCommon") void on_player_update_common_bombspam(Player* this, PlayState* play, Input* input) {
+    if (this != GET_PLAYER(play)){
+        return;
+    }
     if (!bomb_spam_active) {
         return;
     }
@@ -132,10 +131,18 @@ RECOMP_HOOK("Player_UpdateCommon") void on_player_update_common_bombspam(Player*
 }
 
 RECOMP_HOOK("Player_UpdateCommon") void on_player_update_common_redead(Player* this, PlayState* play, Input* input) {
-    if (!sudden_redead_active) {
+    if (this != GET_PLAYER(play)){
         return;
     }
-    if (this != GET_PLAYER(play)){
+
+#ifdef DEBUG_SUDDEN_REDEAD
+    if (input->press.button & (D_JPAD)) {
+        recomp_printf("Sudden Redead Activated\n");
+        sudden_redead_active = true;
+    }
+#endif
+
+    if (!sudden_redead_active) {
         return;
     }
 
@@ -146,22 +153,29 @@ RECOMP_HOOK("Player_UpdateCommon") void on_player_update_common_redead(Player* t
 
     Vec3f cam_pos_at_link = {play->mainCamera.eye.x, this->actor.world.pos.y, play->mainCamera.eye.z};
 
-    Math_Vec3f_Diff(&this->actor.world.pos, &cam_pos_at_link, &spawn_pos);
+    Math_Vec3f_Diff(&cam_pos_at_link, &this->actor.world.pos, &spawn_pos);
     Math3D_Normalize(&spawn_pos);
     Math_Vec3f_Scale(&spawn_pos, distToRedead);
     spawn_pos.x += this->actor.world.pos.x;
-    spawn_pos.y += this->actor.world.pos.y + 20;
+    spawn_pos.y += this->actor.world.pos.y + 5;
     spawn_pos.z += this->actor.world.pos.z;
     CollisionPoly *outPoly = NULL;
     f32 floorPos = BgCheck_EntityRaycastFloor1(&play->colCtx, &outPoly, &spawn_pos);
     if (outPoly != NULL) {
         spawn_pos.y = floorPos;
+        s16 redead_direction = Math_Vec3f_Yaw(&spawn_pos, &this->actor.world.pos);
 
-        Actor_Spawn(
+        EnRd *redead = (EnRd *)Actor_Spawn(
             &play->actorCtx, play, ACTOR_EN_RD,
             spawn_pos.x, spawn_pos.y, spawn_pos.z,
-            0, 0, 0, EN_RD_TYPE_REGULAR);
-        sudden_redead_active = false;
+            0, redead_direction, 0, EN_RD_TYPE_REGULAR);
+
+        if (redead != NULL) {
+            // following two lines make the redead instantly scream and freeze link
+            redead->actor.parent = NULL;
+            redead->isMourning = true;
+            sudden_redead_active = false;
+        }
     }
 
 }
@@ -368,11 +382,7 @@ RECOMP_CALLBACK("mm_recomp_chaos_framework", chaos_on_init) void register_chaos_
     #endif
 
     #ifndef DISABLE_SUDDEN_REDEAD
-    chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_VERY_LOW, NULL);
     chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_LOW, NULL);
-    chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_MEDIUM, NULL);
-    chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_HIGH, NULL);
-    chaos_register_effect(&sudden_redead, CHAOS_DISTURBANCE_VERY_HIGH, NULL);
     #endif
 
     #ifndef DISABLE_ROLLING_LINK
