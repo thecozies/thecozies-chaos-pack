@@ -1,6 +1,7 @@
 #include "chaos_dep.h"
 #include "recomputils.h"
 #include "../mm-decomp/src/overlays/actors/ovl_En_Rd/z_en_rd.h"
+#include "../mm-decomp/src/overlays/actors/ovl_En_Arrow/z_en_arrow.h"
 
 extern void Player_UseItem(PlayState* play, Player* this, ItemId item);
 extern void Player_DestroyHookshot(Player* this);
@@ -22,6 +23,7 @@ extern PlayerAnimationHeader gPlayerAnim_link_silver_throw;
 #define DISABLE_SUDDEN_REDEAD
 // #define DISABLE_ROLLING_LINK
 // #define DISABLE_BIG_HEAD
+// #define DISABLE_NA_AIM
 
 // #define DEBUG_SUDDEN_REDEAD
 
@@ -29,6 +31,7 @@ extern PlayerAnimationHeader gPlayerAnim_link_silver_throw;
 #define SUDDEN_REDEAD_DURATION 20*1
 #define ROLLING_LINK_DURATION 20*20
 #define BIG_HEAD_DURATION 20*20
+#define NA_AIM_DURATION 20*20
 
 #define BIG_HEAD_MIN_SIZE 1
 #define BIG_HEAD_MAX_SIZE 3.5f
@@ -50,6 +53,8 @@ bool rolling_link_active = false;
 bool big_head_active = false;
 s32 big_head_counter = 0;
 f32 big_head_size = BIG_HEAD_MIN_SIZE;
+
+bool na_aim_active = false;
 
 void noop_update_func(GraphicsContext* gfxCtx, GameState* gameState) {
 }
@@ -287,6 +292,29 @@ RECOMP_HOOK_RETURN("Player_DrawGameplay") void Player_DrawGameplayReturn() {
     valid_drawing = false;
 }
 
+void on_na_aim_activate() {
+    recomp_printf("NA Aim Activated\n");
+    na_aim_active = true;
+}
+
+void on_na_aim_end() {
+    recomp_printf("NA Aim Deactivated\n");
+    na_aim_active = false;
+}
+
+RECOMP_HOOK("func_8088ACE0") void on_func_8088ACE0(EnArrow* this, PlayState* play) {
+    static s16 wobble_timer = 0;
+    if (!na_aim_active) {
+        return;
+    }
+
+    wobble_timer++;
+
+    this->actor.shape.rot.y += Math_SinS(wobble_timer * 0x1800) * 0x1000;
+    this->actor.world.rot.y = this->actor.shape.rot.y;
+    this->actor.velocity.y += Math_SinS(wobble_timer * 0x1573) * 8.0f;
+}
+
 ChaosEffect bomb_spam = {
     .name = "Bomb Spam",
     .duration = BOMB_SPAM_DURATION,
@@ -323,6 +351,15 @@ ChaosEffect big_head = {
     .on_end_fun = on_big_head_end,
 };
 
+ChaosEffect na_aim = {
+    .name = "NA Aim",
+    .duration = NA_AIM_DURATION,
+
+    .on_start_fun = on_na_aim_activate,
+    .update_fun = noop_update_func,
+    .on_end_fun = on_na_aim_end,
+};
+
 RECOMP_CALLBACK("mm_recomp_chaos_framework", chaos_on_init) void register_chaos_effects(void) {
     #ifndef DEBUG_BOMB_SPAM
     #ifndef DISABLE_BOMB_SPAM
@@ -345,5 +382,9 @@ RECOMP_CALLBACK("mm_recomp_chaos_framework", chaos_on_init) void register_chaos_
     #ifndef DISABLE_BIG_HEAD
     // Currently set to "low" instead of very low due to head position affecting collision
     chaos_register_effect(&big_head, CHAOS_DISTURBANCE_LOW, NULL);
+    #endif
+    
+    #ifndef DISABLE_NA_AIM
+    chaos_register_effect(&na_aim, CHAOS_DISTURBANCE_MEDIUM, NULL);
     #endif
 }
