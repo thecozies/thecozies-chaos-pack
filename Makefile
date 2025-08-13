@@ -43,7 +43,7 @@ C_SRCS := $(wildcard src/*.c)
 C_OBJS := $(addprefix $(BUILD_DIR)/, $(C_SRCS:.c=.o))
 C_DEPS := $(addprefix $(BUILD_DIR)/, $(C_SRCS:.c=.d))
 
-all: $(TARGET) $(NRM_TARGET) copy_to_mods
+all: $(TARGET) $(NRM_TARGET)
 
 $(TARGET): $(C_OBJS) $(LDSCRIPT) | $(BUILD_DIR)
 	$(LD) $(C_OBJS) $(LDFLAGS) -o $@
@@ -61,7 +61,7 @@ endif
 $(C_OBJS): $(BUILD_DIR)/%.o : %.c | $(BUILD_DIR) $(BUILD_DIR)/src
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -MMD -MF $(@:.o=.d) -c -o $@
 
-copy_to_mods: $(NRM_TARGET)
+copy: $(NRM_TARGET)
 	cp $(NRM_TARGET) $(NRM_COPY_DEST)
 
 clean:
@@ -73,4 +73,4 @@ endif
 
 -include $(C_DEPS)
 
-.PHONY: clean all copy_to_mods
+.PHONY: clean all copy
