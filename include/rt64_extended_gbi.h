@@ -73,7 +73,8 @@
 #define G_EX_POPGEOMETRYMODE_V1         0x00002A
 #define G_EX_SETDITHERNOISESTRENGTH_V1  0x00002B
 #define G_EX_SETRDRAMEXTENDED_V1        0x00002C
-#define G_EX_MAX                        0x00002D
+#define G_EX_SETNEARCLIPPING_V1         0x00002D
+#define G_EX_MAX                        0x00002E
 
 #define G_EX_ORIGIN_NONE            0x800
 #define G_EX_ORIGIN_LEFT            0x0
@@ -363,10 +364,10 @@ typedef union {
         0 \
     )
 
-#define gEXVertexV1(cmd, vtx, count, v0) \
+#define gEXVertex(cmd, vtx, count, v0) \
     G_EX_COMMAND2(cmd, \
         PARAM(RT64_EXTENDED_OPCODE, 8, 24) | PARAM(G_EX_VERTEX_V1, 24, 0), \
-        PARAM((v0)+(n), 7, 1) | PARAM(n, 8, 12), \
+        PARAM((v0), 8, 0) | PARAM((count), 8, 8), \
         0, \
         (unsigned)(vtx) \
     )
@@ -513,6 +514,12 @@ typedef union {
     G_EX_COMMAND1(cmd, \
         PARAM(RT64_EXTENDED_OPCODE, 8, 24) | PARAM(G_EX_SETRDRAMEXTENDED_V1, 24, 0), \
         PARAM(isExtended, 1, 0) \
+    )
+
+#define gEXSetNearClipping(cmd, isEnabled) \
+    G_EX_COMMAND1(cmd, \
+        PARAM(RT64_EXTENDED_OPCODE, 8, 24) | PARAM(G_EX_SETNEARCLIPPING_V1, 24, 0), \
+        PARAM(isEnabled, 1, 0) \
     )
 
 #endif // RT64_EXTENDED_GBI
