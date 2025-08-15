@@ -40,7 +40,7 @@ CozyChaosEffect cozy_top_down_zelda = {
     .effect = {
         .name = "Top Down Zelda",
         .duration = 20*30,
-        .on_start_fun = on_top_down_zelda_activate,
+        .on_start_fun = on_top_down_zelda_start,
         .update_fun = NULL,
         .on_end_fun = on_top_down_zelda_end,
     },
@@ -176,11 +176,9 @@ RECOMP_PATCH s32 View_ApplyPerspective(View* view) {
     aspect = (f32)width / (f32)height;
 
     if (is_main_view && cozy_top_down_zelda.active && player_for_camera != NULL) {
-        // view->scale = 1.0f;
-        // view->zNear = 0;
         main_play_state->lightCtx.fogNear = fog_near;
         main_play_state->lightCtx.zFar = g_far;
-        // view->zFar = main_play_state->lightCtx.zFar = g_far;
+
         gEXSetNearClipping(POLY_OPA_DISP++, true);
         gEXSetNearClipping(POLY_XLU_DISP++, true);
         gEXSetNearClipping(OVERLAY_DISP++, false);
