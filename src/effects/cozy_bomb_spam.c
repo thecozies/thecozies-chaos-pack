@@ -12,8 +12,7 @@ CozyChaosEffect cozy_bomb_spam = {
         .update_fun = NULL,
         .on_end_fun = on_bomb_spam_end,
     },
-    .disturbance = CHAOS_DISTURBANCE_LOW,
-    // .disturbance = CHAOS_DISTURBANCE_HIGH,
+    .disturbance = CHAOS_DISTURBANCE_MEDIUM,
     .active = false,
     .entity = NULL,
 };
