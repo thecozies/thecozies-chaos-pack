@@ -1,6 +1,7 @@
 #include "cozy_chaos.h"
 
 REGISTER_CHAOS_EFFECT(cozy_big_head);
+COMMON_FUNCS(cozy_big_head);
 
 #define BIG_HEAD_DURATION 20*20
 #define BIG_HEAD_MIN_SIZE 1
@@ -18,7 +19,7 @@ CozyChaosEffect cozy_big_head = {
         .duration = BIG_HEAD_DURATION,
         .on_start_fun = on_big_head_activate,
         .update_fun = on_big_head_update,
-        .on_end_fun = on_big_head_end,
+        .on_end_fun = on_cozy_big_head_end,
     },
     .disturbance = CHAOS_DISTURBANCE_LOW,
     .active = false,
@@ -26,8 +27,7 @@ CozyChaosEffect cozy_big_head = {
 };
 
 void on_big_head_activate(struct PlayState *play) {
-    recomp_printf("Big Head Activated\n");
-    cozy_big_head.active = true;
+    on_cozy_big_head_activate(play);
     big_head_counter = 0;
     big_head_size = BIG_HEAD_MIN_SIZE;
     big_head_size_vel = -2.0f;
@@ -66,13 +66,6 @@ void on_big_head_update(struct PlayState *play) {
         cozy_big_head.active = false;
     }
 }
-
-void on_big_head_end(struct PlayState *play) {
-    recomp_printf("Big Head Deactivated\n");
-    cozy_big_head.active = false;
-}
-
-
 
 s32 valid_drawing = false;
 RECOMP_HOOK("Player_DrawGameplay") void on_Player_DrawGameplay(PlayState* play, Player* this, s32 lod, Gfx* cullDList, OverrideLimbDrawFlex overrideLimbDraw) {

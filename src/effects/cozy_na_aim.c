@@ -2,15 +2,15 @@
 
 REGISTER_CHAOS_EFFECT(cozy_na_aim);
 
-COMMON_FUNCS(na_aim, cozy_na_aim, "N/A Aim")
+COMMON_FUNCS(cozy_na_aim)
 
 CozyChaosEffect cozy_na_aim = {
     .effect = {
         .name = "N/A Aim",
         .duration = 20*20,
-        .on_start_fun = on_na_aim_activate,
+        .on_start_fun = on_cozy_na_aim_activate,
         .update_fun = NULL,
-        .on_end_fun = on_na_aim_end,
+        .on_end_fun = on_cozy_na_aim_end,
     },
     .disturbance = CHAOS_DISTURBANCE_HIGH,
     .active = false,

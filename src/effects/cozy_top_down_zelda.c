@@ -2,7 +2,7 @@
 
 REGISTER_CHAOS_EFFECT(cozy_top_down_zelda);
 
-COMMON_FUNCS(top_down_zelda, cozy_top_down_zelda, "Top Down Zelda");
+COMMON_FUNCS(cozy_top_down_zelda);
 
 static bool init_cam = true;
 Player* player_for_camera = NULL;
@@ -32,7 +32,7 @@ void restore_saved_view_properties(View* view, PlayState *play) {
 }
 
 void on_top_down_zelda_start(struct PlayState *play) {
-    on_top_down_zelda_activate(play);
+    on_cozy_top_down_zelda_activate(play);
     init_cam = true;
     should_store_saved_view_properties = true;
     should_restore_saved_view_properties = true;
@@ -44,7 +44,7 @@ CozyChaosEffect cozy_top_down_zelda = {
         .duration = 20*30,
         .on_start_fun = on_top_down_zelda_start,
         .update_fun = NULL,
-        .on_end_fun = on_top_down_zelda_end,
+        .on_end_fun = on_cozy_top_down_zelda_end,
     },
     // .disturbance = CHAOS_DISTURBANCE_MEDIUM,
     .disturbance = CHAOS_DISTURBANCE_LOW,

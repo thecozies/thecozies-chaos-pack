@@ -2,15 +2,15 @@
 
 REGISTER_CHAOS_EFFECT(cozy_rolling_link);
 
-COMMON_FUNCS(rolling_link, cozy_rolling_link, "Rolling Link")
+COMMON_FUNCS(cozy_rolling_link);
 
 CozyChaosEffect cozy_rolling_link = {
     .effect = {
         .name = "Rolling Link",
         .duration = 20*20,
-        .on_start_fun = on_rolling_link_activate,
+        .on_start_fun = on_cozy_rolling_link_activate,
         .update_fun = NULL,
-        .on_end_fun = on_rolling_link_end,
+        .on_end_fun = on_cozy_rolling_link_end,
     },
     .disturbance = CHAOS_DISTURBANCE_HIGH,
     .active = false,

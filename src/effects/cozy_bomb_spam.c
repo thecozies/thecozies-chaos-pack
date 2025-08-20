@@ -2,15 +2,15 @@
 
 REGISTER_CHAOS_EFFECT(cozy_bomb_spam);
 
-COMMON_FUNCS(bomb_spam, cozy_bomb_spam, "Bomb Spam")
+COMMON_FUNCS(cozy_bomb_spam)
 
 CozyChaosEffect cozy_bomb_spam = {
     .effect = {
         .name = "Bomb Spam",
         .duration = 20*12,
-        .on_start_fun = on_bomb_spam_activate,
+        .on_start_fun = on_cozy_bomb_spam_activate,
         .update_fun = NULL,
-        .on_end_fun = on_bomb_spam_end,
+        .on_end_fun = on_cozy_bomb_spam_end,
     },
     .disturbance = CHAOS_DISTURBANCE_MEDIUM,
     .active = false,

@@ -2,13 +2,13 @@
 
 REGISTER_CHAOS_EFFECT(cozy_sudden_redead);
 
-COMMON_ACTIVATE_FUNC(sudden_redead, cozy_sudden_redead, "Sudden Redead");
+COMMON_ACTIVATE_FUNC(cozy_sudden_redead);
 
 CozyChaosEffect cozy_sudden_redead = {
     .effect = {
         .name = "Sudden Redead",
         .duration = 1,
-        .on_start_fun = on_sudden_redead_activate,
+        .on_start_fun = on_cozy_sudden_redead_activate,
         .update_fun = NULL,
         .on_end_fun = NULL,
     },
