@@ -1,5 +1,7 @@
 #include "cozy_chaos.h"
 
+REGISTER_CHAOS_EFFECT(cozy_na_aim);
+
 COMMON_FUNCS(na_aim, cozy_na_aim, "N/A Aim")
 
 CozyChaosEffect cozy_na_aim = {

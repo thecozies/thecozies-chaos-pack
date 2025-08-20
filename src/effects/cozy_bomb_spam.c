@@ -1,5 +1,7 @@
 #include "cozy_chaos.h"
 
+REGISTER_CHAOS_EFFECT(cozy_bomb_spam);
+
 COMMON_FUNCS(bomb_spam, cozy_bomb_spam, "Bomb Spam")
 
 CozyChaosEffect cozy_bomb_spam = {
@@ -10,7 +12,8 @@ CozyChaosEffect cozy_bomb_spam = {
         .update_fun = NULL,
         .on_end_fun = on_bomb_spam_end,
     },
-    .disturbance = CHAOS_DISTURBANCE_HIGH,
+    .disturbance = CHAOS_DISTURBANCE_LOW,
+    // .disturbance = CHAOS_DISTURBANCE_HIGH,
     .active = false,
     .entity = NULL,
 };

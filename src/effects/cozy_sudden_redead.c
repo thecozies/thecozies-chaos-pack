@@ -1,5 +1,7 @@
 #include "cozy_chaos.h"
 
+REGISTER_CHAOS_EFFECT(cozy_sudden_redead);
+
 COMMON_ACTIVATE_FUNC(sudden_redead, cozy_sudden_redead, "Sudden Redead");
 
 CozyChaosEffect cozy_sudden_redead = {

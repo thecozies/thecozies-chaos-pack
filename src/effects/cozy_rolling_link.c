@@ -1,5 +1,7 @@
 #include "cozy_chaos.h"
 
+REGISTER_CHAOS_EFFECT(cozy_rolling_link);
+
 COMMON_FUNCS(rolling_link, cozy_rolling_link, "Rolling Link")
 
 CozyChaosEffect cozy_rolling_link = {

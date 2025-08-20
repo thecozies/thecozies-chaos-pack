@@ -5,13 +5,6 @@
 #include "rt64_extended_gbi.h"
 #include "cozy_effect_externs.h"
 
-#define ENABLE_BOMB_SPAM
-#define ENABLE_SUDDEN_REDEAD
-#define ENABLE_ROLLING_LINK
-#define ENABLE_BIG_HEAD
-#define ENABLE_NA_AIM
-#define ENABLE_TOP_DOWN_ZELDA
-
 typedef struct CozyChaosEffect {
     ChaosEffect effect;
     ChaosDisturbance disturbance;
@@ -52,9 +45,10 @@ extern PlayerUpdateCache player_update_cache;
         { player_update_callback(this, play); }; \
     }
 
-extern CozyChaosEffect cozy_bomb_spam;
-extern CozyChaosEffect cozy_sudden_redead;
-extern CozyChaosEffect cozy_rolling_link;
-extern CozyChaosEffect cozy_big_head;
-extern CozyChaosEffect cozy_na_aim;
-extern CozyChaosEffect cozy_top_down_zelda;
+void register_chaos_effect(CozyChaosEffect *cozy_effect);
+
+#define REGISTER_CHAOS_EFFECT(cozy_effect) \
+extern CozyChaosEffect cozy_effect; \
+RECOMP_CALLBACK("mm_recomp_chaos_framework", chaos_on_init) void register_chaos_effect_##cozy_effect(void) { \
+    register_chaos_effect(&cozy_effect); \
+}

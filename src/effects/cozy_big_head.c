@@ -1,5 +1,7 @@
 #include "cozy_chaos.h"
 
+REGISTER_CHAOS_EFFECT(cozy_big_head);
+
 #define BIG_HEAD_DURATION 20*20
 #define BIG_HEAD_MIN_SIZE 1
 #define BIG_HEAD_MAX_SIZE 2.5f

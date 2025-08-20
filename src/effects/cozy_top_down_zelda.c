@@ -1,5 +1,7 @@
 #include "cozy_chaos.h"
 
+REGISTER_CHAOS_EFFECT(cozy_top_down_zelda);
+
 COMMON_FUNCS(top_down_zelda, cozy_top_down_zelda, "Top Down Zelda");
 
 static bool init_cam = true;
