@@ -21,6 +21,7 @@ extern f32 sControlStickMagnitude;
 
 #include "../mm-decomp/src/overlays/actors/ovl_En_Rd/z_en_rd.h"
 #include "../mm-decomp/src/overlays/actors/ovl_En_Arrow/z_en_arrow.h"
+#include "../mm-decomp/src/overlays/effects/ovl_Effect_Ss_Hitmark/z_eff_ss_hitmark.h"
 
 enum AcHitEffect {
     HIT_EFFECT_UNK_0,
