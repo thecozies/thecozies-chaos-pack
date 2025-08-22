@@ -2,6 +2,7 @@
 
 #include "chaos_dep.h"
 #include "recomputils.h"
+#include "z64recomp_api.h"
 #include "rt64_extended_gbi.h"
 #include "cozy_effect_externs.h"
 

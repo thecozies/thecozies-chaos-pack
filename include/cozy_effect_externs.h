@@ -22,3 +22,15 @@ extern f32 sControlStickMagnitude;
 #include "../mm-decomp/src/overlays/actors/ovl_En_Rd/z_en_rd.h"
 #include "../mm-decomp/src/overlays/actors/ovl_En_Arrow/z_en_arrow.h"
 
+enum AcHitEffect {
+    HIT_EFFECT_UNK_0,
+    HIT_EFFECT_FIRE,
+    HIT_EFFECT_FREEZE,
+    HIT_EFFECT_SHOCK,
+    HIT_EFFECT_KNOCKBACK,
+    HIT_EFFECT_UNK_5,
+    HIT_EFFECT_UNK_6,
+    HIT_EFFECT_KNOCKBACK_SHOCK,
+    HIT_EFFECT_UNK_8,
+    HIT_EFFECT_KNOCKBACK_BURN,
+};
