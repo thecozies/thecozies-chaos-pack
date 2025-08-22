@@ -57,6 +57,13 @@ typedef struct {
     NAArrowEffectType effect_type;
 } MoreArrowDatas;
 
+enum ARROW_ATTACK_STATE {
+    ARROW_ATTACK_STATE_WAIT,
+    ARROW_ATTACK_STATE_SLOW_DOWN,
+    ARROW_ATTACK_STATE_TURN_TO_PLAYER,
+    ARROW_ATTACK_STATE_RELEASE
+};
+
 ActorExtensionId arrow_extension_id;
 
 RECOMP_CALLBACK("*", recomp_on_init) void handleInits() {
@@ -124,19 +131,13 @@ RECOMP_HOOK_RETURN("func_8088A594") void after_func_8088A594() {
             break;
         }
         case NA_ARROW_EFFECT_TYPE_ATTACK: {
+            arrow_data->state = ARROW_ATTACK_STATE_SLOW_DOWN;
             break;
         }
         default:
             break;
     }
 }
-
-enum ARROW_ATTACK_STATE {
-    ARROW_ATTACK_STATE_WAIT,
-    ARROW_ATTACK_STATE_SLOW_DOWN,
-    ARROW_ATTACK_STATE_TURN_TO_PLAYER,
-    ARROW_ATTACK_STATE_RELEASE
-};
 
 static s16 arrowPrevPitch;
 static s16 arrowPrevYaw;
@@ -204,7 +205,7 @@ RECOMP_HOOK("func_8088ACE0") void on_func_8088ACE0(EnArrow* this, PlayState* pla
         }
         case NA_ARROW_EFFECT_TYPE_FLACCID: {
             if (arrow_data->pure_timer == 1) {
-                Actor_PlaySfx(&this->actor, NA_SE_IT_DEKUNUTS_DROP_BOMB);
+                Actor_PlaySfx(&this->actor, NA_SE_PL_DEKUNUTS_DROP_BOMB);
             }
             this->actor.gravity = -0.5f;
             break;
@@ -241,7 +242,7 @@ RECOMP_HOOK("func_8088ACE0") void on_func_8088ACE0(EnArrow* this, PlayState* pla
                                     this->actor.gravity = 0;
                     Vec3f linksHead;
                     linksHead.x = player->actor.world.pos.x;
-                    linksHead.y = player->bodyPartsPos[PLAYER_BODYPART_HEAD].y + 3.0f;
+                    linksHead.y = player->bodyPartsPos[PLAYER_BODYPART_HEAD].y - 5.0f;
                     linksHead.z = player->actor.world.pos.z;
 
                     s16 goalPitch = Math_Vec3f_Pitch(&this->actor.world.pos, &linksHead);
@@ -264,6 +265,7 @@ RECOMP_HOOK("func_8088ACE0") void on_func_8088ACE0(EnArrow* this, PlayState* pla
                     this->collider.elem.atDmgInfo.effect = get_arrow_attack_type(this);
                     this->collider.elem.atDmgInfo.damage = get_arrow_damage(this);
                     this->collider.base.atFlags |= AT_ON | AT_TYPE_ALL;
+                    
                     CollisionCheck_SetAT(play, &play->colChkCtx, &this->collider.base);
                     break;
                 }
@@ -292,6 +294,8 @@ RECOMP_HOOK_RETURN("func_8088ACE0") void after_func_8088ACE0() {
         ) {
             this->actor.shape.rot.x = arrowPrevPitch;
             this->actor.shape.rot.y = arrowPrevYaw;
+        } else if (arrow_data->state == ARROW_ATTACK_STATE_RELEASE) {
+            this->collider.base.atFlags &= ~AT_HIT;
         }
     }
 }
